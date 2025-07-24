@@ -1,12 +1,16 @@
 package io.daviddm.inventory_audit_api.service.impl;
 
-import io.daviddm.inventory_audit_api.dto.request.AuditRequestDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.daviddm.inventory_audit_api.dto.response.AuditResponseDTO;
 import io.daviddm.inventory_audit_api.enums.AuditOperation;
+import io.daviddm.inventory_audit_api.exception.BusinessRuleException;
 import io.daviddm.inventory_audit_api.mapper.AuditMapper;
 import io.daviddm.inventory_audit_api.model.Audit;
 import io.daviddm.inventory_audit_api.repository.AuditRepository;
+import io.daviddm.inventory_audit_api.repository.UserRepository;
 import io.daviddm.inventory_audit_api.service.AuditService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,12 +22,38 @@ import java.util.List;
 public class AuditServiceImpl implements AuditService {
     private final AuditRepository auditRepository;
     private final AuditMapper auditMapper;
+    private final ObjectMapper objectMapper;
+    private final UserRepository userRepository;
+
+    private void logOperation(String entityName, AuditOperation operation, Object before, Object after, Long userId) {
+        try {
+            String dataBefore = objectMapper.writeValueAsString(before);
+            String dataAfter = objectMapper.writeValueAsString(after);
+            Audit audit = new Audit();
+            audit.setOperation(operation);
+            audit.setDataBefore(dataBefore);
+            audit.setDataAfter(dataAfter);
+            audit.setEntityName(entityName);
+            audit.setUser(userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("No se encuentra el usuario: " + userId)));
+            auditRepository.save(audit);
+        } catch (JsonProcessingException e) {
+            throw new BusinessRuleException("Error al serializar datos para auditoría");
+        }
+    }
 
     @Override
-    public AuditResponseDTO createAudit(AuditRequestDTO dto) {
-        AuditOperation.validateEnum(dto.operation());
-        Audit audit = auditMapper.toEntity(dto);
-        return auditMapper.toResponse(auditRepository.save(audit));
+    public void logInsert(String entityName, Object before, Object after, Long userId) {
+        logOperation(entityName, AuditOperation.validateEnum("INSERT"), before, after, userId);
+    }
+
+    @Override
+    public void logUpdate(String entityName, Object before, Object after, Long userId) {
+        logOperation(entityName, AuditOperation.validateEnum("UPDATE"), before, after, userId);
+    }
+
+    @Override
+    public void logDelete(String entityName, Object before, Object after, Long userId) {
+        logOperation(entityName, AuditOperation.validateEnum("DELETE"), before, after, userId);
     }
 
     @Override
@@ -58,7 +88,7 @@ public class AuditServiceImpl implements AuditService {
 
     @Override
     public List<AuditResponseDTO> getAuditsByOperation(String type) {
-        AuditOperation movementType=AuditOperation.validateEnum(type);
+        AuditOperation movementType = AuditOperation.validateEnum(type);
         return auditRepository.findByOperation(movementType).stream().map(auditMapper::toResponse).toList();
     }
 }

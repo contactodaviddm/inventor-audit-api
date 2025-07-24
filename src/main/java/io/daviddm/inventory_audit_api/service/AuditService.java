@@ -1,12 +1,17 @@
 package io.daviddm.inventory_audit_api.service;
 
-import io.daviddm.inventory_audit_api.dto.request.AuditRequestDTO;
 import io.daviddm.inventory_audit_api.dto.response.AuditResponseDTO;
+import io.daviddm.inventory_audit_api.enums.AuditOperation;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface AuditService {
-    AuditResponseDTO createAudit(AuditRequestDTO dto);
+    void logInsert(String entityName, Object before, Object after, Long userId);
+
+    void logUpdate(String entityName, Object before, Object after, Long userId);
+
+    void logDelete(String entityName, Object before, Object after, Long userId);
 
     List<AuditResponseDTO> getAllAudits();
 
