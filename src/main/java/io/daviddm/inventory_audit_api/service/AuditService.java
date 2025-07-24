@@ -2,7 +2,6 @@ package io.daviddm.inventory_audit_api.service;
 
 import io.daviddm.inventory_audit_api.dto.request.AuditRequestDTO;
 import io.daviddm.inventory_audit_api.dto.response.AuditResponseDTO;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,4 +19,6 @@ public interface AuditService {
     List<AuditResponseDTO> getAuditsByEntityAndDate(String name, LocalDateTime date);
 
     List<AuditResponseDTO> getAuditsByEntityAndDateBetween(String name, LocalDateTime start, LocalDateTime end);
+
+    List<AuditResponseDTO> getAuditsByOperation(String operation);
 }

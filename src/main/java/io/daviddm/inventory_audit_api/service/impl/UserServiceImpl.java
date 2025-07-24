@@ -5,6 +5,7 @@ import io.daviddm.inventory_audit_api.dto.response.UserResponseDTO;
 import io.daviddm.inventory_audit_api.exception.BusinessRuleException;
 import io.daviddm.inventory_audit_api.mapper.UserMapper;
 import io.daviddm.inventory_audit_api.model.User;
+import io.daviddm.inventory_audit_api.repository.AuditRepository;
 import io.daviddm.inventory_audit_api.repository.ProductMovementsRepository;
 import io.daviddm.inventory_audit_api.repository.UserRepository;
 import io.daviddm.inventory_audit_api.service.UserService;
@@ -21,6 +22,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final ProductMovementsRepository productMovementsRepository;
+    private final AuditRepository auditRepository;
 
     @Override
     public UserResponseDTO createUser(UserRequestDTO dto) {
@@ -49,7 +51,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("El usuario a eliminar no existe: " + id));
-        if (userRepository.existsByUser_Id(user.getId())) throw new BusinessRuleException("El usuario no puede borrarse porque tiene movimiento de productos asociados.");
+        if (productMovementsRepository.existsByUser_Id(user.getId()) || auditRepository.existsByUser_Id(user.getId()))
+            throw new BusinessRuleException("El usuario no puede borrarse porque ya ha tenido actividad en el sistema.");
         userRepository.delete(user);
     }
 }

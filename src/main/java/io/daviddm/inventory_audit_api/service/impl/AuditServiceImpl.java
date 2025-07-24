@@ -2,12 +2,12 @@ package io.daviddm.inventory_audit_api.service.impl;
 
 import io.daviddm.inventory_audit_api.dto.request.AuditRequestDTO;
 import io.daviddm.inventory_audit_api.dto.response.AuditResponseDTO;
+import io.daviddm.inventory_audit_api.enums.AuditOperation;
 import io.daviddm.inventory_audit_api.mapper.AuditMapper;
 import io.daviddm.inventory_audit_api.model.Audit;
 import io.daviddm.inventory_audit_api.repository.AuditRepository;
 import io.daviddm.inventory_audit_api.service.AuditService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,6 +21,7 @@ public class AuditServiceImpl implements AuditService {
 
     @Override
     public AuditResponseDTO createAudit(AuditRequestDTO dto) {
+        AuditOperation.validateEnum(dto.operation());
         Audit audit = auditMapper.toEntity(dto);
         return auditMapper.toResponse(auditRepository.save(audit));
     }
@@ -53,5 +54,11 @@ public class AuditServiceImpl implements AuditService {
     @Override
     public List<AuditResponseDTO> getAuditsByEntityAndDateBetween(String name, LocalDateTime start, LocalDateTime end) {
         return auditRepository.findByEntityNameAndDateBetween(name, start, end).stream().map(auditMapper::toResponse).toList();
+    }
+
+    @Override
+    public List<AuditResponseDTO> getAuditsByOperation(String type) {
+        AuditOperation movementType=AuditOperation.validateEnum(type);
+        return auditRepository.findByOperation(movementType).stream().map(auditMapper::toResponse).toList();
     }
 }

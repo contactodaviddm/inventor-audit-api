@@ -5,7 +5,7 @@ import io.daviddm.inventory_audit_api.exception.BusinessRuleException;
 public enum ProductStatus {
     ACTIVO, AGOTADO;
 
-    public static ProductStatus from(String value) {
+    public static ProductStatus validateEnum(String value) {
         try {
             return ProductStatus.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException ex) {

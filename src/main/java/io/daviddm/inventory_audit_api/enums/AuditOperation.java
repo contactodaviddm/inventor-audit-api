@@ -5,7 +5,7 @@ import io.daviddm.inventory_audit_api.exception.BusinessRuleException;
 public enum AuditOperation {
     INSERT, UPDATE, DELETE;
 
-    public static AuditOperation from(String value) {
+    public static AuditOperation validateEnum(String value) {
         try {
             return AuditOperation.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
