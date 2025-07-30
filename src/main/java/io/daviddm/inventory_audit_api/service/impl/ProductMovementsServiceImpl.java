@@ -8,9 +8,11 @@ import io.daviddm.inventory_audit_api.model.ProductMovements;
 import io.daviddm.inventory_audit_api.repository.ProductMovementsRepository;
 import io.daviddm.inventory_audit_api.repository.ProductRepository;
 import io.daviddm.inventory_audit_api.repository.UserRepository;
+import io.daviddm.inventory_audit_api.service.AuditService;
 import io.daviddm.inventory_audit_api.service.ProductMovementsService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,12 +24,15 @@ public class ProductMovementsServiceImpl implements ProductMovementsService {
     private final ProductMovementsMapper productMovementsMapper;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     @Override
     public ProductMovementsResponseDTO createProductMovements(ProductMovementsRequestDTO dto) {
         MovementType.validateEnum(dto.type());
         ProductMovements productMovements = productMovementsMapper.toEntity(dto);
-        return productMovementsMapper.toResponse(productMovementsRepository.save(productMovements));
+        productMovements = productMovementsRepository.save(productMovements);
+        auditService.logInsert("ProductMovements", dto, productMovements);
+        return productMovementsMapper.toResponse(productMovements);
     }
 
     @Override
@@ -37,7 +42,9 @@ public class ProductMovementsServiceImpl implements ProductMovementsService {
         productMovementsMapper.updateEntityFromDto(dto, productMovements);
         productMovements.setProduct(productRepository.findById(dto.productId()).orElseThrow(() -> new EntityNotFoundException("No se encontró el producto: " + dto.productId())));
         productMovements.setUser(userRepository.findById(dto.userId()).orElseThrow(() -> new EntityNotFoundException("No se encontró el usuario: " + dto.userId())));
-        return productMovementsMapper.toResponse(productMovementsRepository.save(productMovements));
+        productMovements = productMovementsRepository.save(productMovements);
+        auditService.logUpdate("ProductMovements", dto, productMovements);
+        return productMovementsMapper.toResponse(productMovements);
     }
 
     @Override
@@ -54,27 +61,12 @@ public class ProductMovementsServiceImpl implements ProductMovementsService {
     public void deleteProductMovements(Long id) {
         ProductMovements productMovements = productMovementsRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encontró el movimiento a eliminar: " + id));
         productMovementsRepository.delete(productMovements);
+        auditService.logInsert("ProductMovements", productMovements, productMovements);
     }
 
     @Override
-    public List<ProductMovementsResponseDTO> getProductMovementsByProductId(Long id) {
-        return productMovementsRepository.findAllByProduct_Id(id).stream().map(productMovementsMapper::toResponse).toList();
+    public List<ProductMovementsResponseDTO> findProductMovementsFilters(Specification<ProductMovements> spec) {
+        return productMovementsRepository.findAll(spec).stream().map(productMovementsMapper::toResponse).toList();
     }
 
-    @Override
-    public List<ProductMovementsResponseDTO> getProductMovementsByUserId(Long id) {
-        return productMovementsRepository.findAllByUser_Id(id).stream().map(productMovementsMapper::toResponse).toList();
-    }
-
-    @Override
-    public List<ProductMovementsResponseDTO> getProductMovementsByProductName(String name) {
-        return productMovementsRepository.findAllByProduct_Name(name).stream().map(productMovementsMapper::toResponse).toList();
-
-    }
-
-    @Override
-    public List<ProductMovementsResponseDTO> getProductMovementsByType(String type) {
-        MovementType movementType=MovementType.validateEnum(type);
-        return productMovementsRepository.findAllByType(movementType).stream().map(productMovementsMapper::toResponse).toList();
-    }
 }

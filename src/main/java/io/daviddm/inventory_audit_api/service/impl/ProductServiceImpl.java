@@ -7,9 +7,11 @@ import io.daviddm.inventory_audit_api.exception.BusinessRuleException;
 import io.daviddm.inventory_audit_api.mapper.ProductMapper;
 import io.daviddm.inventory_audit_api.model.Product;
 import io.daviddm.inventory_audit_api.repository.*;
+import io.daviddm.inventory_audit_api.service.AuditService;
 import io.daviddm.inventory_audit_api.service.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,6 +25,7 @@ public class ProductServiceImpl implements ProductService {
     private final BrandRepository brandRepository;
     private final WarehouseRepository warehouseRepository;
     private final ProductMovementsRepository productMovementsRepository;
+    private final AuditService auditService;
 
     @Override
     public ProductResponseDTO createProduct(ProductRequestDTO dto) {
@@ -31,7 +34,9 @@ public class ProductServiceImpl implements ProductService {
         product.setCategory(categoryRepository.findById(dto.categoryId()).orElseThrow(() -> new EntityNotFoundException("No se encontró la categoria: " + dto.categoryId())));
         product.setBrand(brandRepository.findById(dto.brandId()).orElseThrow(() -> new EntityNotFoundException("No se encontró la marca: " + dto.brandId())));
         product.setWarehouse(warehouseRepository.findById(dto.warehouseId()).orElseThrow(() -> new EntityNotFoundException("No se encontró la bodega: " + dto.warehouseId())));
-        return productMapper.toResponse(productRepository.save(product));
+        product = productRepository.save(product);
+        auditService.logInsert("Product", dto, product);
+        return productMapper.toResponse(product);
     }
 
     @Override
@@ -42,7 +47,9 @@ public class ProductServiceImpl implements ProductService {
         product.setCategory(categoryRepository.findById(dto.categoryId()).orElseThrow(() -> new EntityNotFoundException("No se encontró la categoria: " + dto.categoryId())));
         product.setBrand(brandRepository.findById(dto.brandId()).orElseThrow(() -> new EntityNotFoundException("No se encontró la marca: " + dto.brandId())));
         product.setWarehouse(warehouseRepository.findById(dto.warehouseId()).orElseThrow(() -> new EntityNotFoundException("No se encontró la bodega: " + dto.warehouseId())));
-        return productMapper.toResponse(productRepository.save(product));
+        product = productRepository.save(product);
+        auditService.logUpdate("Product", dto, product);
+        return productMapper.toResponse(product);
     }
 
     @Override
@@ -62,41 +69,13 @@ public class ProductServiceImpl implements ProductService {
         if (productMovementsRepository.existsByProduct_Id(id))
             throw new BusinessRuleException("No se puede eliminar el producto, porque tiene movimientos asociados.");
         productRepository.delete(product);
+        auditService.logDelete("Product", product, product);
     }
 
     @Override
-    public List<ProductResponseDTO> getProductsByCategoryName(String name) {
-        return productRepository.findAllByCategory_NameIgnoreCase(name).stream().map(productMapper::toResponse).toList();
+    public List<ProductResponseDTO> findAllByFilters(Specification<Product> spec) {
+        return productRepository.findAll(spec).stream().map(productMapper::toResponse).toList();
     }
 
-    @Override
-    public List<ProductResponseDTO> getProductsByCategoryId(Long id) {
-        return productRepository.findAllByCategory_Id(id).stream().map(productMapper::toResponse).toList();
-    }
 
-    @Override
-    public List<ProductResponseDTO> getProductsByBrandName(String name) {
-        return productRepository.findAllByBrand_NameIgnoreCase(name).stream().map(productMapper::toResponse).toList();
-    }
-
-    @Override
-    public List<ProductResponseDTO> getProductsByBrandId(Long id) {
-        return productRepository.findAllByBrand_Id(id).stream().map(productMapper::toResponse).toList();
-    }
-
-    @Override
-    public List<ProductResponseDTO> getProductsByWarehouseName(String name) {
-        return productRepository.findAllByWarehouse_NameIgnoreCase(name).stream().map(productMapper::toResponse).toList();
-    }
-
-    @Override
-    public List<ProductResponseDTO> getProductsByWarehouseId(Long id) {
-        return productRepository.findAllByWarehouse_Id(id).stream().map(productMapper::toResponse).toList();
-    }
-
-    @Override
-    public List<ProductResponseDTO> getProductsByStatus(String status) {
-        ProductStatus productStatus=ProductStatus.validateEnum(status);
-        return productRepository.findAllByStatus(productStatus).stream().map(productMapper::toResponse).toList();
-    }
 }

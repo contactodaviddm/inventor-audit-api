@@ -7,6 +7,7 @@ import io.daviddm.inventory_audit_api.mapper.CategoryMapper;
 import io.daviddm.inventory_audit_api.model.Category;
 import io.daviddm.inventory_audit_api.repository.CategoryRepository;
 import io.daviddm.inventory_audit_api.repository.ProductRepository;
+import io.daviddm.inventory_audit_api.service.AuditService;
 import io.daviddm.inventory_audit_api.service.CategoryService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -20,18 +21,23 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final AuditService auditService;
 
     @Override
     public CategoryResponseDTO createCategory(CategoryRequestDTO dto) {
         Category category = categoryMapper.toEntity(dto);
-        return categoryMapper.toResponse(categoryRepository.save(category));
+        category = categoryRepository.save(category);
+        auditService.logInsert("Category", dto, category);
+        return categoryMapper.toResponse(category);
     }
 
     @Override
     public CategoryResponseDTO updateCategory(CategoryRequestDTO dto, Long id) {
         Category category = categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encontró la categoría a actualizar: " + id));
         categoryMapper.updateEntityFromDto(dto, category);
-        return categoryMapper.toResponse(categoryRepository.save(category));
+        category = categoryRepository.save(category);
+        auditService.logUpdate("Category", dto, category);
+        return categoryMapper.toResponse(category);
     }
 
     @Override
@@ -41,15 +47,16 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<CategoryResponseDTO> getAllCategory() {
+    public List<CategoryResponseDTO> getAllCategories() {
         return categoryRepository.findAll().stream().map(categoryMapper::toResponse).toList();
     }
 
     @Override
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encontró la categoria a eliminar: " + id));
-        if (productRepository.existsCategory_Id(id))
+        if (productRepository.existsByCategory_Id(id))
             throw new BusinessRuleException("No se puede eliminar la categoria, porque tiene productos asignados");
         categoryRepository.delete(category);
+        auditService.logDelete("Category", category, category);
     }
 }

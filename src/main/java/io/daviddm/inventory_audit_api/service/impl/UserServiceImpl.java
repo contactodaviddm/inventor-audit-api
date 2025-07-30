@@ -8,6 +8,7 @@ import io.daviddm.inventory_audit_api.model.User;
 import io.daviddm.inventory_audit_api.repository.AuditRepository;
 import io.daviddm.inventory_audit_api.repository.ProductMovementsRepository;
 import io.daviddm.inventory_audit_api.repository.UserRepository;
+import io.daviddm.inventory_audit_api.service.AuditService;
 import io.daviddm.inventory_audit_api.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,19 +25,32 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final ProductMovementsRepository productMovementsRepository;
     private final AuditRepository auditRepository;
+    private final AuditService auditService;
 
     @Override
     public UserResponseDTO createUser(UserRequestDTO dto) {
+        if (userRepository.existsByEmailIgnoreCase(dto.email()))
+            throw new BusinessRuleException("El correo ingresado ya esta asignado a otro usuario, intente con uno distinto");
+        if (userRepository.existsByDocumentNumber(dto.documentNumber()))
+            throw new BusinessRuleException("El documento ingresado ya esta asignado a otro usuario, intente con uno distinto");
         User user = userMapper.toEntity(dto);
-        AuditRequestDTO auditRequestDTO=new AuditRequestDTO("User","INSERT",dto.toString(),user.toString(),1L, LocalDateTime.now());
-        return userMapper.toResponse(userRepository.save(user));
+        User userSave = userRepository.save(user);
+        auditService.logInsert("User", dto, userSave);
+        return userMapper.toResponse(userSave);
     }
 
     @Override
     public UserResponseDTO updateUser(Long id, UserRequestDTO dto) {
+        if (!userRepository.existsByIdAndEmailIgnoreCase(id, dto.email()) && userRepository.existsByEmailIgnoreCase(dto.email())) {
+            throw new BusinessRuleException("El correo ingresado ya esta asignado a otro usuario, intente con uno distinto");
+        }
+        if (!userRepository.existsByIdAndDocumentNumber(id, dto.documentNumber()) && userRepository.existsByDocumentNumber(dto.documentNumber()))
+            throw new BusinessRuleException("El documento ingresado ya esta asignado a otro usuario, intente con uno distinto");
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encontró el usuario a actualizar: " + id));
         userMapper.updateEntityFromDto(dto, user);
-        return userMapper.toResponse(userRepository.save(user));
+        user = userRepository.save(user);
+        auditService.logUpdate("User", dto, user);
+        return userMapper.toResponse(user);
     }
 
     @Override
@@ -56,5 +70,6 @@ public class UserServiceImpl implements UserService {
         if (productMovementsRepository.existsByUser_Id(user.getId()) || auditRepository.existsByUser_Id(user.getId()))
             throw new BusinessRuleException("El usuario no puede borrarse porque ya ha tenido actividad en el sistema.");
         userRepository.delete(user);
+        auditService.logDelete("User", user, user);
     }
 }

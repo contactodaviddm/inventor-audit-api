@@ -7,6 +7,7 @@ import io.daviddm.inventory_audit_api.mapper.BrandMapper;
 import io.daviddm.inventory_audit_api.model.Brand;
 import io.daviddm.inventory_audit_api.repository.BrandRepository;
 import io.daviddm.inventory_audit_api.repository.ProductRepository;
+import io.daviddm.inventory_audit_api.service.AuditService;
 import io.daviddm.inventory_audit_api.service.BrandService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -20,18 +21,23 @@ public class BrandServiceImpl implements BrandService {
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
     private final ProductRepository productRepository;
+    private final AuditService auditService;
 
     @Override
     public BrandResponseDTO createBrand(BrandRequestDTO dto) {
         Brand brand = brandMapper.toEntity(dto);
-        return brandMapper.toResponse(brandRepository.save(brand));
+        brand = brandRepository.save(brand);
+        auditService.logInsert("Brand", dto, brand);
+        return brandMapper.toResponse(brand);
     }
 
     @Override
     public BrandResponseDTO updateBrand(BrandRequestDTO dto, Long id) {
         Brand brand = brandRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encontró la marca a actualizar: " + id));
         brandMapper.updateEntityFromDto(dto, brand);
-        return brandMapper.toResponse(brandRepository.save(brand));
+        brand = brandRepository.save(brand);
+        auditService.logUpdate("Brand", dto, brand);
+        return brandMapper.toResponse(brand);
     }
 
     @Override
@@ -48,8 +54,9 @@ public class BrandServiceImpl implements BrandService {
     @Override
     public void deleteBrand(Long id) {
         Brand brand = brandRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encontró la marca a eliminar: " + id));
-        if (productRepository.existsBrand_Id(id))
+        if (productRepository.existsByBrand_Id(id))
             throw new BusinessRuleException("No se puede eliminar la marca, tiene productos asignados");
         brandRepository.delete(brand);
+        auditService.logDelete("Brand", brand, brand);
     }
 }

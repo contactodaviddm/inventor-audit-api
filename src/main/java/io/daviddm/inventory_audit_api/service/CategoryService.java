@@ -12,7 +12,7 @@ public interface CategoryService {
 
     CategoryResponseDTO getCategoryById(Long id);
 
-    List<CategoryResponseDTO> getAllCategory();
+    List<CategoryResponseDTO> getAllCategories();
 
     void deleteCategory(Long id);
 }

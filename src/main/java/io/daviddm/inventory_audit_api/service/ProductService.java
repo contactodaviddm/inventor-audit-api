@@ -2,6 +2,8 @@ package io.daviddm.inventory_audit_api.service;
 
 import io.daviddm.inventory_audit_api.dto.request.ProductRequestDTO;
 import io.daviddm.inventory_audit_api.dto.response.ProductResponseDTO;
+import io.daviddm.inventory_audit_api.model.Product;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
@@ -16,17 +18,5 @@ public interface ProductService {
 
     void deleteProduct(Long id);
 
-    List<ProductResponseDTO> getProductsByCategoryName(String name);
-
-    List<ProductResponseDTO> getProductsByCategoryId(Long id);
-
-    List<ProductResponseDTO> getProductsByBrandName(String name);
-
-    List<ProductResponseDTO> getProductsByBrandId(Long id);
-
-    List<ProductResponseDTO> getProductsByWarehouseName(String name);
-
-    List<ProductResponseDTO> getProductsByWarehouseId(Long id);
-
-    List<ProductResponseDTO> getProductsByStatus(String status);
+    List<ProductResponseDTO> findAllByFilters(Specification<Product> spec);
 }

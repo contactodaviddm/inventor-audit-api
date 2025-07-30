@@ -1,12 +1,11 @@
 package io.daviddm.inventory_audit_api.dto.request;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record UserRequestDTO(
         @NotNull(message = "El documento no puede ser nulo")
+        @Positive(message = "El documento debe ser un valor positivo")
+
         Long documentNumber,
         @NotBlank(message = "El nombre no puede estar vacío")
         @Size(max = 45, message = "El nombre no puede superar los 45 caracteres")
@@ -20,5 +19,7 @@ public record UserRequestDTO(
         @NotBlank(message = "El correo no puede estar vacío")
         @Email(message = "Correo no válido")
         @Size(max = 150, message = "El correo no puede superar los 150 caracteres")
-        String email) {
+        String email,
+        @Size(max = 45, message = "La contraseña no puede superar los 150 caracteres")
+        String password) {
 }

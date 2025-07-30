@@ -8,8 +8,10 @@ import lombok.Setter;
 
 @Entity
 @Table
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,5 +23,7 @@ public class User {
     private String lastName;
     @Column(name = "phone_number")
     private String phoneNumber;
+    @Column(unique = true)
     private String email;
+    private String password;
 }
