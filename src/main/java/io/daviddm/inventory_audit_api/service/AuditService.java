@@ -1,8 +1,9 @@
 package io.daviddm.inventory_audit_api.service;
 
 import io.daviddm.inventory_audit_api.dto.response.AuditResponseDTO;
+import io.daviddm.inventory_audit_api.model.Audit;
+import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public interface AuditService {
@@ -14,15 +15,7 @@ public interface AuditService {
 
     List<AuditResponseDTO> getAllAudits();
 
-    List<AuditResponseDTO> getAllAuditByDate(LocalDate date);
+    AuditResponseDTO getAuditById(Long id);
 
-    List<AuditResponseDTO> getAllAuditByDateBetween(LocalDate start, LocalDate end);
-
-    List<AuditResponseDTO> getAuditsByEntity(String name);
-
-    List<AuditResponseDTO> getAuditsByEntityAndDate(String name, LocalDate date);
-
-    List<AuditResponseDTO> getAuditsByEntityAndDateBetween(String name, LocalDate start, LocalDate end);
-
-    List<AuditResponseDTO> getAuditsByOperation(String operation);
+    List<AuditResponseDTO> getAuditsByFilters(Specification<Audit> spec);
 }

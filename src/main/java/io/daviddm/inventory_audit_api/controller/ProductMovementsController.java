@@ -5,17 +5,12 @@ import io.daviddm.inventory_audit_api.dto.response.ProductMovementsResponseDTO;
 import io.daviddm.inventory_audit_api.model.ProductMovements;
 import io.daviddm.inventory_audit_api.service.ProductMovementsService;
 
-import static io.daviddm.inventory_audit_api.util.ValidationMessages.*;
-
 import io.daviddm.inventory_audit_api.specification.ProductMovementsSpecification;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -24,7 +19,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/product-movements")
 @RequiredArgsConstructor
-@Validated
 public class ProductMovementsController {
     private final ProductMovementsService productMovementsService;
 
@@ -35,15 +29,12 @@ public class ProductMovementsController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductMovementsResponseDTO> updateProductMovements(@Valid @RequestBody ProductMovementsRequestDTO dto,
-                                                                              @PathVariable @NotNull(message = ID_NOT_NULL)
-                                                                              @Positive(message = ID_POSITIVE)
-                                                                              Long id) {
+                                                                              @PathVariable Long id) {
         return ResponseEntity.ok(productMovementsService.updateProductMovementsResponse(dto, id));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ProductMovementsResponseDTO> deleteProductMovements(@PathVariable @NotNull(message = ID_NOT_NULL)
-                                                                              @Positive(message = ID_POSITIVE) Long id) {
+    public ResponseEntity<ProductMovementsResponseDTO> deleteProductMovements(@PathVariable Long id) {
         productMovementsService.deleteProductMovements(id);
         return ResponseEntity.noContent().build();
     }
@@ -54,8 +45,7 @@ public class ProductMovementsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductMovementsResponseDTO> getProductMovementsById(@PathVariable @NotNull(message = ID_NOT_NULL)
-                                                                               @Positive(message = ID_POSITIVE) Long id) {
+    public ResponseEntity<ProductMovementsResponseDTO> getProductMovementsById(@PathVariable Long id) {
         return ResponseEntity.ok(productMovementsService.getProductMovementById(id));
     }
 

@@ -16,42 +16,42 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> manejarNoEncontrado(EntityNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(LocalDateTime.now(), HttpStatus.NOT_FOUND.value(), ex.getMessage(), "RESOURCE_NOT_FOUND"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> manejarErroresDeValidacion(MethodArgumentNotValidException ex) {
-        Map<String, Object> respuesta = new HashMap<>();
-        respuesta.put("timestamp", LocalDateTime.now());
-        respuesta.put("status", HttpStatus.BAD_REQUEST.value());
-        respuesta.put("errorCode", "VALIDATION_FAILED");
+    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("errorCode", "VALIDATION_FAILED");
 
-        Map<String, String> errores = new HashMap<>();
+        Map<String, String> errors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-            errores.put(error.getField(), error.getDefaultMessage());
+            errors.put(error.getField(), error.getDefaultMessage());
         }
-        respuesta.put("errores", errores);
-        return new ResponseEntity<>(respuesta, HttpStatus.BAD_REQUEST);
+        response.put("errors", errors);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> manejarGenerico(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleGenericErrors(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 new ErrorResponse(LocalDateTime.now(), HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error interno del servidor", "INTERNAL_SERVER_ERROR")
         );
     }
 
     @ExceptionHandler(BusinessRuleException.class)
-    public ResponseEntity<ErrorResponse> manejarReglaDeNegocio(BusinessRuleException ex) {
+    public ResponseEntity<ErrorResponse> handleBusinessRuleException(BusinessRuleException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), ex.getMessage(), "BUSINESS_RULE_VIOLATION")
         );
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> manejarErrorDeParseo(HttpMessageNotReadableException ex) {
+    public ResponseEntity<ErrorResponse> handleParsingErrors(HttpMessageNotReadableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(),
                         "El cuerpo de la solicitud no es válido.",

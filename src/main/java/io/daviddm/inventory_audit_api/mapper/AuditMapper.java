@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface AuditMapper {
-    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "dataBefore", ignore = true)
+    @Mapping(target = "dataAfter", ignore = true)
     AuditResponseDTO toResponse(Audit audit);
 }

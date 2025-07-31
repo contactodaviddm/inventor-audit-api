@@ -5,7 +5,7 @@ import jakarta.validation.constraints.*;
 public record UserRequestDTO(
         @NotNull(message = "El documento no puede ser nulo")
         @Positive(message = "El documento debe ser un valor positivo")
-
+        @NotNull(message = "El documento no puede ser nulo")
         Long documentNumber,
         @NotBlank(message = "El nombre no puede estar vacío")
         @Size(max = 45, message = "El nombre no puede superar los 45 caracteres")

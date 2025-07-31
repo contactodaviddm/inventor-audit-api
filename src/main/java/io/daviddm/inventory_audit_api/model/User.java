@@ -16,12 +16,12 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "document_number")
+    @Column(name = "document_number", unique = true)
     private Long documentNumber;
     private String name;
     @Column(name = "last_name")
     private String lastName;
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", unique = true)
     private String phoneNumber;
     @Column(unique = true)
     private String email;

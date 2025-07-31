@@ -1,9 +1,12 @@
 package io.daviddm.inventory_audit_api.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.daviddm.inventory_audit_api.dto.response.AuditResponseDTO;
+import io.daviddm.inventory_audit_api.dto.response.CompactUserResponseDTO;
 import io.daviddm.inventory_audit_api.enums.AuditOperation;
+import io.daviddm.inventory_audit_api.enums.ProductStatus;
 import io.daviddm.inventory_audit_api.exception.BusinessRuleException;
 import io.daviddm.inventory_audit_api.mapper.AuditMapper;
 import io.daviddm.inventory_audit_api.model.Audit;
@@ -13,6 +16,7 @@ import io.daviddm.inventory_audit_api.repository.UserRepository;
 import io.daviddm.inventory_audit_api.service.AuditService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -31,7 +35,7 @@ public class AuditServiceImpl implements AuditService {
         User user = userRepository.findById(1L).orElseThrow(() -> new EntityNotFoundException("No hay usuario ligado al correo"));
         try {
             String dataBefore = objectMapper.writeValueAsString(before);
-            String dataAfter = objectMapper.writeValueAsString(after);
+            String dataAfter = after == null ? objectMapper.writeValueAsString("null") : objectMapper.writeValueAsString(after);
             Audit audit = new Audit();
             audit.setOperation(operation);
             audit.setDataBefore(dataBefore);
@@ -59,41 +63,58 @@ public class AuditServiceImpl implements AuditService {
         logOperation(entityName, AuditOperation.validateEnum("DELETE"), before, after);
     }
 
+    private List<AuditResponseDTO> mapAuditListManuallyWithJson(List<Audit> dto) {
+        return dto.stream().map(audit -> {
+            try {
+                JsonNode before = objectMapper.readTree(audit.getDataBefore());
+                JsonNode after = objectMapper.readTree(audit.getDataAfter());
+                CompactUserResponseDTO user = auditMapper.toResponse(audit).user();
+                return new AuditResponseDTO(
+                        audit.getId(),
+                        audit.getEntityName(),
+                        audit.getOperation(),
+                        before,
+                        after,
+                        user,
+                        audit.getDate()
+                );
+            } catch (JsonProcessingException e) {
+                throw new BusinessRuleException("Error al leer JSON desde base de datos");
+            }
+        }).toList();
+    }
+
     @Override
     public List<AuditResponseDTO> getAllAudits() {
-        return auditRepository.findAll().stream().map(auditMapper::toResponse).toList();
+        return mapAuditListManuallyWithJson(auditRepository.findAll());
     }
 
     @Override
-    public List<AuditResponseDTO> getAllAuditByDate(LocalDate date) {
-        return auditRepository.findByDate(date).stream().map(auditMapper::toResponse).toList();
+    public AuditResponseDTO getAuditById(Long id) {
+        Audit audit = auditRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró la auditoría con ID: " + id));
+        try {
+            JsonNode before = objectMapper.readTree(audit.getDataBefore());
+            JsonNode after = objectMapper.readTree(audit.getDataAfter());
+            CompactUserResponseDTO user = auditMapper.toResponse(audit).user();
+            return new AuditResponseDTO(
+                    audit.getId(),
+                    audit.getEntityName(),
+                    audit.getOperation(),
+                    before,
+                    after,
+                    user,
+                    audit.getDate()
+            );
+        } catch (JsonProcessingException e) {
+            throw new BusinessRuleException("Error al leer JSON desde base de datos");
+        }
     }
 
     @Override
-    public List<AuditResponseDTO> getAllAuditByDateBetween(LocalDate start, LocalDate end) {
-        if (start.isAfter(end)) throw new BusinessRuleException("La fecha inicial no puede superar a la final");
-        return auditRepository.findByDateBetween(start, end).stream().map(auditMapper::toResponse).toList();
+    public List<AuditResponseDTO> getAuditsByFilters(Specification<Audit> spec) {
+        return mapAuditListManuallyWithJson(auditRepository.findAll(spec));
     }
 
-    @Override
-    public List<AuditResponseDTO> getAuditsByEntity(String name) {
-        return auditRepository.findByEntityName(name).stream().map(auditMapper::toResponse).toList();
-    }
 
-    @Override
-    public List<AuditResponseDTO> getAuditsByEntityAndDate(String name, LocalDate date) {
-        return auditRepository.findByEntityNameAndDate(name, date).stream().map(auditMapper::toResponse).toList();
-    }
-
-    @Override
-    public List<AuditResponseDTO> getAuditsByEntityAndDateBetween(String name, LocalDate start, LocalDate end) {
-        if (start.isAfter(end)) throw new BusinessRuleException("La fecha inicial no puede superar a la final");
-        return auditRepository.findByEntityNameAndDateBetween(name, start, end).stream().map(auditMapper::toResponse).toList();
-    }
-
-    @Override
-    public List<AuditResponseDTO> getAuditsByOperation(String type) {
-        AuditOperation movementType = AuditOperation.validateEnum(type);
-        return auditRepository.findByOperation(movementType).stream().map(auditMapper::toResponse).toList();
-    }
 }
