@@ -10,8 +10,6 @@ import java.util.List;
 public interface ProductMovementsService {
     ProductMovementsResponseDTO createProductMovements(ProductMovementsRequestDTO dto);
 
-    ProductMovementsResponseDTO updateProductMovementsResponse(ProductMovementsRequestDTO dto, Long id);
-
     ProductMovementsResponseDTO getProductMovementById(Long id);
 
     List<ProductMovementsResponseDTO> getAllProductMovements();

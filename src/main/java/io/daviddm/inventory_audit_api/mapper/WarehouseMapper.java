@@ -12,5 +12,5 @@ public interface WarehouseMapper {
 
     WarehouseResponseDTO toResponse(Warehouse warehouse);
 
-    void updateEntityFromDto(WarehouseRequestDTO dto, @MappingTarget WarehouseMapper warehouseMapper);
+    void updateEntityFromDto(WarehouseRequestDTO dto, @MappingTarget Warehouse warehouseMapper);
 }

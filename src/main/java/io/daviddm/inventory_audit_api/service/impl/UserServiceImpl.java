@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,14 +44,27 @@ public class UserServiceImpl implements UserService {
         }
         User user = userMapper.toEntity(dto);
         User userSave = userRepository.save(user);
-        auditService.logInsert("User", dto, userSave);
+        auditService.logInsert("User", null, userSave);
         return userMapper.toResponse(userSave);
+    }
+
+    private void verifyChanges(User user, UserRequestDTO dto) {
+        boolean verify = user.getDocumentNumber().equals(dto.documentNumber())
+                && user.getName().equals(dto.name())
+                && user.getLastName().equals(dto.lastName())
+                && user.getPhoneNumber().equals(dto.phoneNumber())
+                && user.getEmail().equals(dto.email());
+        if (verify) {
+            throw new BusinessRuleException("No hay cambios para actualizar");
+        }
+
     }
 
     @Transactional
     @Override
     public UserResponseDTO updateUser(Long id, UserRequestDTO dto) {
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encontró el usuario a actualizar: " + id));
+        verifyChanges(user, dto);
         User userBefore = objectMapper.convertValue(user, User.class);
         boolean emailUnique = !userRepository.existsByIdAndEmailIgnoreCase(id, dto.email()) && userRepository.existsByEmailIgnoreCase(dto.email());
         boolean documentUnique = !userRepository.existsByIdAndDocumentNumber(id, dto.documentNumber()) && userRepository.existsByDocumentNumber(dto.documentNumber());

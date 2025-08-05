@@ -9,7 +9,7 @@ public enum AuditOperation {
         try {
             return AuditOperation.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new BusinessRuleException("El estado ingresado no es válido");
+            throw new BusinessRuleException("El estado ingresado no es válido.");
         }
     }
 }

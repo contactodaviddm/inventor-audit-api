@@ -1,7 +1,7 @@
 package io.daviddm.inventory_audit_api.controller;
 
 import io.daviddm.inventory_audit_api.dto.response.AuditResponseDTO;
-import io.daviddm.inventory_audit_api.enums.ProductStatus;
+import io.daviddm.inventory_audit_api.enums.AuditOperation;
 import io.daviddm.inventory_audit_api.model.Audit;
 import io.daviddm.inventory_audit_api.service.AuditService;
 import io.daviddm.inventory_audit_api.specification.AuditSpecification;
@@ -37,7 +37,7 @@ public class AuditController {
                                                                      @RequestParam(required = false) LocalDate date,
                                                                      @RequestParam(required = false) LocalDate dateStart,
                                                                      @RequestParam(required = false) LocalDate dateEnd) {
-        ProductStatus.validateEnum(operation);
+        if (operation != null && !operation.isBlank()) AuditOperation.validateEnum(operation);
         Specification<Audit> spec = AuditSpecification.findByAllFilters(entityName, operation, userId, userDocument, date, dateStart, dateEnd);
         return ResponseEntity.ok(auditService.getAuditsByFilters(spec));
     }

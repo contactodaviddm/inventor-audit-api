@@ -34,8 +34,10 @@ public class AuditServiceImpl implements AuditService {
         //Temporary user
         User user = userRepository.findById(1L).orElseThrow(() -> new EntityNotFoundException("No hay usuario ligado al correo"));
         try {
-            String dataBefore = objectMapper.writeValueAsString(before);
-            String dataAfter = after == null ? objectMapper.writeValueAsString("null") : objectMapper.writeValueAsString(after);
+            System.out.println("Before: " + before);
+            String dataBefore = before == null ? objectMapper.writeValueAsString("empty") : objectMapper.writeValueAsString(before);
+            String dataAfter = after == null ? objectMapper.writeValueAsString("empty") : objectMapper.writeValueAsString(after);
+            System.out.println("After: " + after);
             Audit audit = new Audit();
             audit.setOperation(operation);
             audit.setDataBefore(dataBefore);
@@ -44,7 +46,7 @@ public class AuditServiceImpl implements AuditService {
             audit.setUser(user);
             auditRepository.save(audit);
         } catch (JsonProcessingException e) {
-            throw new BusinessRuleException("Error al serializar datos para auditoría");
+            throw new BusinessRuleException("Error al serializar datos para auditoría ");
         }
     }
 

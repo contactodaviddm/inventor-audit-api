@@ -4,4 +4,7 @@ import io.daviddm.inventory_audit_api.model.Brand;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BrandRepository extends JpaRepository<Brand, Long> {
+    boolean existsByIdAndNameIgnoreCase(Long id, String name);
+
+    boolean existsByNameIgnoreCase(String name);
 }

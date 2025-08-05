@@ -9,7 +9,7 @@ public enum MovementType {
         try {
             return MovementType.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new BusinessRuleException("El tipo de movimiento no es válido");
+            throw new BusinessRuleException("El tipo de movimiento no es válido. Valores permitidos: ENTRADA, SALIDA");
         }
     }
 }

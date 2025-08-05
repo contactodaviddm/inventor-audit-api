@@ -9,7 +9,7 @@ public enum ProductStatus {
         try {
             return ProductStatus.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException ex) {
-            throw new BusinessRuleException("El estado ingresado no es válido");
+            throw new BusinessRuleException("El estado ingresado no es válido. Valores permitidos: ACTIVO, AGOTADO");
         }
     }
 }

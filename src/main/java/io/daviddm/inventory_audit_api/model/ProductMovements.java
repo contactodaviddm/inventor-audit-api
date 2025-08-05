@@ -12,8 +12,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "product_movements")
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProductMovements {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,4 +33,5 @@ public class ProductMovements {
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, updatable = false)
     private MovementType type;
+    private String status;
 }

@@ -4,6 +4,8 @@ import io.daviddm.inventory_audit_api.model.Audit;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class AuditSpecification {
     public static Specification<Audit> findByAllFilters(String entityName, String operation, Long userId, Long userDocument, LocalDate date, LocalDate dateStart, LocalDate dateEnd) {
@@ -22,13 +24,12 @@ public class AuditSpecification {
             }
         }
         if (date != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("date"), date));
+            spec = spec.and((root, query, cb) -> cb.equal(cb.function("DATE", LocalDate.class, root.get("date")), date));
         } else {
-            if (dateStart != null) {
-                spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("date"), dateStart));
-            }
-            if (dateEnd != null) {
-                spec = spec.and(((root, query, cb) -> cb.lessThanOrEqualTo(root.get("date"), dateEnd)));
+            if (dateStart != null && dateEnd != null) {
+                LocalDateTime start=dateStart.atStartOfDay();
+                LocalDateTime end=dateEnd.atTime(LocalTime.MAX);
+                spec = spec.and((root, query, cb) -> cb.between(root.get("date"), start, end));
             }
         }
         return spec;

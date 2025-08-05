@@ -27,12 +27,6 @@ public class ProductMovementsController {
         return ResponseEntity.status(HttpStatus.CREATED).body(productMovementsService.createProductMovements(dto));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ProductMovementsResponseDTO> updateProductMovements(@Valid @RequestBody ProductMovementsRequestDTO dto,
-                                                                              @PathVariable Long id) {
-        return ResponseEntity.ok(productMovementsService.updateProductMovementsResponse(dto, id));
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<ProductMovementsResponseDTO> deleteProductMovements(@PathVariable Long id) {
         productMovementsService.deleteProductMovements(id);
